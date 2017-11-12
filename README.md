@@ -5,7 +5,7 @@ A register-based virtual machine and disassembler that is used by [Kai](https://
 All instructions are stored in 16 bits<sup>*</sup> with an immediate 0 to 8 bytes.
 ```
 /----------------------------------------------------\
-| Opcode Byte | Arguments | <sup>†</sup>Immediate (0 - 8 bytes) |<br>
+| Opcode Byte | Arguments | <sup>†</sup>Immediate (0 - 8 bytes) |
 \----------------------------------------------------/
 ```
 <sup>*</sup>: KaiVM's bytecode is little endian<br>
