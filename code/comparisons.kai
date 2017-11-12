@@ -1,0 +1,32 @@
+NON :: 0x00
+EQL :: 0x01
+NEQ :: 0x02
+GTR :: 0x03
+GTE :: 0x04
+LSS :: 0x05
+LSE :: 0x06
+ABV :: 0x07
+ABE :: 0x08
+BLW :: 0x09
+BLE :: 0x0A
+CRY :: 0x0B
+OFL :: 0x0C
+
+shouldBranch :: fn(condition: u16, flags: u8) -> bool {
+    switch condition {
+    case NON: return true
+    case EQL: return false
+    case NEQ: return false
+    case GTR: return false
+    case GTE: return false
+    case LSS: return false
+    case LSE: return false
+    case ABV: return false
+    case ABE: return false
+    case BLW: return false
+    case BLE: return false
+    case CRY: return false
+    case OFL: return false
+    case: return false
+    }
+}

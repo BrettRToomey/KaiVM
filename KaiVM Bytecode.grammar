@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ufwb version="1.17">
+    <grammar name="KaiVM Bytecode" start="id:103" author="Brett Toomey" fileextension="bc">
+        <description>Grammar for KaiVM bytecode</description>
+        <structure name="Instruction" id="103" length="0" encoding="ISO_8859-1:1987" endian="little" signed="no">
+            <number name="flags" id="104" fillcolor="1EFF8B" repeatmin="0" type="integer" length="1">
+                <mask name="dest" value="0xF0">
+                    <fixedvalue name="r1" value="0x0"/>
+                    <fixedvalue name="r2" value="0x1"/>
+                    <fixedvalue name="r3" value="0x2"/>
+                </mask>
+                <mask name="source" value="0xF">
+                    <fixedvalue name="r1" value="0x0"/>
+                    <fixedvalue name="r2" value="0x1"/>
+                    <fixedvalue name="r3" value="0x2"/>
+                    <fixedvalue name="r4" value="0x3"/>
+                    <fixedvalue name="r5" value="0x4"/>
+                    <fixedvalue name="r6" value="0x5"/>
+                    <fixedvalue name="r7" value="0x6"/>
+                    <fixedvalue name="r8" value="0x7"/>
+                    <fixedvalue name="r9" value="0x8"/>
+                    <fixedvalue name="ra" value="0x9"/>
+                </mask>
+            </number>
+            <number name="opcode" id="105" fillcolor="FFBEF7" type="integer" length="1" display="hex">
+                <fixedvalues>
+                    <fixedvalue name="halt" value="0x0"/>
+                    <fixedvalue name="nop" value="0x1"/>
+                    <fixedvalue name="add" value="0x2"/>
+                    <fixedvalue name="sub" value="0x3"/>
+                    <fixedvalue name="ldd" value="0x10"/>
+                    <fixedvalue name="jmp" value="0x20"/>
+                    <fixedvalue name="addi" value="0x82"/>
+                    <fixedvalue name="ldi" value="0x90"/>
+                    <fixedvalue name="jmi" value="0xA0"/>
+                </fixedvalues>
+            </number>
+            <scriptelement name="immediate_check" id="106">
+                <script name="unnamed" type="Generic">
+                    <source language="Lua">size = 1
+
+results = currentMapper:getCurrentResults()
+currentGrammar = currentMapper:getCurrentGrammar()
+byteView = currentMapper:getCurrentByteView()
+
+offset = currentMapper:getCurrentOffset()
+number = byteView:readUnsignedInt(offset-1, 1, synalysis.ENDIAN_LITTLE)
+
+value = synalysis.Value()
+value:setUnsigned(number)
+
+results:append(value)
+
+return false</source>
+                </script>
+            </scriptelement>
+        </structure>
+    </grammar>
+</ufwb>

@@ -1,0 +1,27 @@
+HALT :: 0x00
+NOP  :: 0x01
+ADD  :: 0x02
+SUB  :: 0x03
+
+LDD  :: 0x10
+CPY  :: 0x11
+
+JMP  :: 0x20
+
+ADDi :: 0x82
+LDI  :: 0x90
+
+JMI  :: 0xA0
+
+buildHalt :: fn() -> u16 {
+    return HALT << 8
+}
+
+buildNop :: fn() -> u16 {
+    return NOP << 8
+}
+
+buildAdd :: fn(l, r: u16) -> u16 {
+    return ADD << 8 | l << 4 | r
+}
+
