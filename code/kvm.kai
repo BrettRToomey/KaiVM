@@ -1,5 +1,5 @@
 #import "ops.kai"
-#import "comparisons.kai"
+#import "conditions.kai"
 
 #library "libc"
 #foreign libc {
@@ -26,7 +26,7 @@ Register :: struct {
     type: RegisterEnum
 }
 
-REG_COUNT :: 10
+REG_COUNT :: 0xF
 
 VM :: struct {
     registers: [REG_COUNT]Register
@@ -193,7 +193,7 @@ ldi :: fn(instr: u16, vm: *VM) -> void {
 }
 
 jmp :: fn(instr: u16, vm: *VM) -> void {
-    if !comparisons.shouldBranch(instr & 0xF, vm.flags)
+    if !conditions.shouldBranch(instr & 0xF, vm.flags)
         return
 
     lreg := (instr & 0xF0) >> 4
@@ -204,6 +204,6 @@ jmi :: fn(instr: u16, vm: *VM) -> void {
     address := loadImmediate(instr, vm)
 
     condition := (instr & 0xF0) >> 4
-    if comparisons.shouldBranch(condition, vm.flags)
+    if conditions.shouldBranch(condition, vm.flags)
         vm.ip = autocast address
 }

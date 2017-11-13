@@ -11,6 +11,20 @@ All instructions are stored in 16 bits<sup>*</sup> with an immediate 0 to 8 byte
 <sup>*</sup>: KaiVM's bytecode is little endian<br>
 <sup>†</sup>: An instruction has an immediate value when the opcode's most significant bit is set.
 
+# Status flags
+```
+7  bit  0
+---- ----
+rrrB ALGE
+|||| ||||
+|||| |||+- Equal: TODO
+|||| ||+-- Greater: TODO
+|||| |+--- Less: TODO
+|||| +---- Above: TODO
+|||+------ Below: TODO
++++------- Reserved: No effect
+```
+
 # Instruction builder
 > TODO
 
