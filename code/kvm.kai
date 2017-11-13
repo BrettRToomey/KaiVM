@@ -50,6 +50,7 @@ initOpcodes :: fn() -> void {
     opcodes[SUB]  = &sub
 
     opcodes[CPY]  = &cpy
+    opcodes[CMP]  = &cmp
 
     opcodes[JMP]  = &jmp
 
@@ -190,6 +191,26 @@ ldi :: fn(instr: u16, vm: *VM) -> void {
     vm.registers[lreg].value.int = rhs
     if rhs == 0
         vm.flags = 1
+}
+
+cmp :: fn(instr: u16, vm: *VM) -> void {
+    lreg := (instr & 0xF0) >> 4
+    left  := vm.registers[lreg].value.int
+    right := vm.registers[instr & 0xF].value.int
+    result := left + right
+    vm.registers[lreg].value.int = result
+
+    uLeft := cast(u64)left
+    uRight := cast(u64)right
+
+    f: u8 = 0
+    f |= (left == right)  ? 0x01 : 0
+    f |= (left > right)   ? 0x02 : 0
+    f |= (left < right)   ? 0x04 : 0
+    f |= (uLeft > uRight) ? 0x08 : 0
+    f |= (uLeft < uRight) ? 0x10 : 0
+
+    vm.flags = f
 }
 
 jmp :: fn(instr: u16, vm: *VM) -> void {
