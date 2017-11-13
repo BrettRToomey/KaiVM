@@ -15,9 +15,9 @@ All instructions are stored in 16 bits<sup>*</sup> with an immediate 0 to 8 byte
 ```
 7  bit  0
 ---- ----
-rrrB ALGE
+rrrB ALGZ
 |||| ||||
-|||| |||+- Equal: TODO
+|||| |||+- Zero: TODO
 |||| ||+-- Greater: TODO
 |||| |+--- Less: TODO
 |||| +---- Above: TODO
