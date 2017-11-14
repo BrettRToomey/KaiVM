@@ -121,7 +121,7 @@ loadImmediate :: fn(instr: u16, vm: *VM) -> i64 {
 
 main :: fn() -> i32 {
     initOpcodes()
-    vm, ok := boot([]u8{ 0x10, 0x90, 0x01, 0x82, 0x01, 0x10, 0x20, 0x00})
+    vm, ok := boot([]u8{0x11, 0x90, 0x03, 0x01, 0x82, 0x01, 0x10, 0x20, 0x00})
     if !ok {
         printf("Failed to initialize VM\n".raw)
         return 1

@@ -1,4 +1,5 @@
 #import "ops.kai"
+#import "conditions.kai"
 #library "libc"
 #foreign libc {
     memcpy :: (dest, src: rawptr, size: u64) -> rawptr
@@ -7,23 +8,6 @@
     strlen :: (str: *u8) -> u64
     fopen  :: (path: *u8, mode: *u8) -> rawptr
     fread  :: (ptr: rawptr, size: u64, nmemb: u64, file: rawptr) -> u64
-}
-
-getName :: fn(instr: u16) -> string {
-    opcode := (instr >> 8) & 0x7F // remove immediate flag
-    using ops
-
-    switch opcode {
-    case HALT: return "hlt"
-    case NOP:  return "nop"
-    case ADD:  return "add"
-    case SUB:  return "sub"
-    case LDD:  return "ldi"
-    case JMP:  return "jmp"
-    case: 
-        printf("Unknown opcode: %02X\n".raw, opcode)
-        return "unk"
-    }
 }
 
 loadImmediate :: fn(instr: u16, code: []u8, ip: *u64) -> i64 {
@@ -55,10 +39,24 @@ disassemble :: fn(code: []u8) -> bool {
         memcpy(&instr, &(code[ip]), sizeof(u16))
         ip += 2
 
-        name := getName(instr)
-        opcode := (instr >> 8) & 0xFF
+        name := ops.getName(instr)
+        opcode := (instr >> 8) & 0x7F
         if opcode == ops.HALT || opcode == ops.NOP {
             printf("%s\n".raw, name)
+            continue
+        }
+
+        if opcode == ops.JMP {
+            cond := conditions.getJmpName(instr)
+            printf("%s ".raw, cond.raw)
+            if (instr >> 8) & 0x80 != 0 {
+                immediate := loadImmediate(instr, code, &ip)
+                printf("%xh\n".raw, immediate)
+            } else {
+                rreg := (instr & 0xF0) >> 4
+                printf("r%d\n".raw, rreg + 1)
+            }
+
             continue
         }
 
@@ -67,7 +65,7 @@ disassemble :: fn(code: []u8) -> bool {
 
         if (instr >> 8) & 0x80 != 0 {
             immediate := loadImmediate(instr, code, &ip)
-            printf(", #%x\n".raw, immediate)
+            printf(", %xh\n".raw, immediate)
         } else {
             rreg := instr & 0xF
             printf(", r%d\n".raw, rreg + 1)

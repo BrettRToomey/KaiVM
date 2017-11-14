@@ -32,3 +32,31 @@ shouldBranch :: fn(condition: u16, flags: u8) -> bool {
     case: return false
     }
 }
+
+getJmpName :: fn(instr: u16) -> string {
+    cond: u16
+    if (instr >> 8) & 0x80 == 0
+        cond = instr & 0xF
+    else
+        cond = (instr & 0xF0) >> 4
+
+    switch cond {
+    case NON: return "jmp"
+    case EQL: return "jeq"
+    case NEQ: return "jne"
+    case GTR: return "jg"
+    case GTE: return "jge"
+    case LSS: return "jl"
+    case LSE: return "jle"
+    case ABV: return "ja"
+    case ABE: return "jae"
+    case BLW: return "jb"
+    case BLE: return "jbe"
+    case CRY: return "jc"
+    case OFL: return "jo"
+    case: return "unknown condition"
+    }
+
+    // FIXME(Brett): this is a compiler bug in the all branches return check
+    return "compiler bug"
+}
