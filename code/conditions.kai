@@ -42,7 +42,7 @@ getJmpName :: fn(instr: u16) -> string {
 
     switch cond {
     case NON: return "jmp"
-    case EQL: return "jeq"
+    case EQL: return "je"
     case NEQ: return "jne"
     case GTR: return "jg"
     case GTE: return "jge"
