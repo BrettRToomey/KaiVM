@@ -33,9 +33,10 @@ To ease debugging, KaiVM comes with a disassembler. You can build this target by
 
 Example:
 ```
-$ ./disassembler examples/a.bc 
-ldi r1, #cd
-add r4, r5
-add r1, #abcd
+$ ./disassembler examples/cmp.bc 
+ldi r1, 2h
+cpy r2, r1
+cmp r1, r2
+jeq 0h
 hlt
 ```
