@@ -1,0 +1,222 @@
+#import "ops.kai"
+#import "conditions.kai"
+
+#import builtin("types") _
+
+#library "libc"
+#foreign libc {
+    mmap   :: (addr: rawptr, len: u64, prot: i32, flags: i32, fd: i32, offset: u64) -> rawptr
+    memcpy :: (dest, src: rawptr, size: u64) -> rawptr
+    malloc :: (size: u64) -> rawptr
+    printf :: (fmt: *u8, args: #cvargs ..any) -> i32
+}
+
+Register :: union {
+    int: u64
+    flt: f64
+    str: string
+}
+
+Program :: struct {
+
+}
+
+REG_COUNT :: 0xF
+PAGE_SIZE :: 0x1000
+
+VM :: struct {
+    registers: [REG_COUNT]Register
+    ip: u64
+    pgr: []u8
+    flags: u8
+    running: bool
+}
+
+opcodes : [0x100]*(u16, *VM) -> void
+
+initOpcodes :: fn() -> void {
+    for i := 0; i < opcodes.len; i += 1 {
+        opcodes[i] = &err_unknown_op
+    }
+
+    using ops
+    opcodes[NOP]  = &nop
+    opcodes[HALT] = &halt
+    opcodes[ADD]  = &add
+    opcodes[SUB]  = &sub
+
+    opcodes[CPY]  = &cpy
+    opcodes[CMP]  = &cmp
+
+    opcodes[JMP]  = &jmp
+
+    // immediates
+    opcodes[ADDi] = &addi
+    opcodes[MOV]  = &mov
+    opcodes[JMI]  = &jmi
+}
+
+dumpRegisters :: fn(vm: *VM) -> void {
+    if !vm
+        return
+
+    for i := 0; i < vm.registers.len; i += 1 {
+        if i % 5 == 0 && i != 0
+            printf("\n       ".raw)
+        printf("r%1x:%04X ".raw, i+1, vm.registers[i].int)
+    }
+
+    printf("\n".raw)
+}
+
+boot :: fn(pgr: []u8) -> *VM, bool {
+    if pgr.len == 0
+        return nil, false
+
+    vm: *VM = autocast malloc(SizeOf(VM))
+    if !vm
+        return nil, false
+
+    vm.pgr = pgr
+    vm.ip, vm.flags = 0, 0
+    vm.running = true
+
+    for i := 0; i < vm.registers.len; i += 1 {
+        vm.registers[i].int = 0
+    }
+
+    return vm, true
+}
+
+step :: fn(vm: *VM) -> void {
+    if !vm || !vm.running
+        return
+
+    instr: u16
+    memcpy(&instr, &(vm.pgr[vm.ip]), SizeOf(u16))
+
+    vm.ip += 2
+
+    handler := opcodes[(instr >> 8) & 0xFF]
+    handler(instr, vm)
+}
+
+loadImmediate :: fn(instr: u16, vm: *VM) -> u64 {
+    result: u64 = 0
+
+    size := (instr & 0xF)
+    memcpy(&result, &(vm.pgr[vm.ip]), autocast size)
+    vm.ip += cast(u64) size
+
+    return result
+}
+
+main :: fn() -> i32 {
+    initOpcodes()
+    vm, ok := boot([]u8{0x11, 0x90, 0x03, 0x01, 0x82, 0x01, 0x10, 0x20, 0x00})
+    if !ok {
+        printf("Failed to initialize VM\n".raw)
+        return 1
+    }
+
+    for vm.running {
+        step(vm)
+        dumpRegisters(vm)
+    }
+
+    return 0
+}
+
+err_unknown_op :: fn(instr: u16, vm: *VM) -> void {
+    printf("invalid instruction 0x%02X (ip:%d)\n".raw, vm.pgr[vm.ip], vm.ip)
+    vm.running = false
+}
+
+nop :: fn(instr: u16, vm: *VM) -> void {
+}
+
+halt :: fn(instr: u16, vm: *VM) -> void {
+    vm.running = false
+}
+
+add :: fn(instr: u16, vm: *VM) -> void {
+    lreg := (instr & 0xF0) >> 4
+    left  := vm.registers[lreg].int
+    right := vm.registers[instr & 0xF].int
+    result := left + right
+    vm.registers[lreg].int = result
+    if result == 0
+        vm.flags = 1
+}
+
+addi :: fn(instr: u16, vm: *VM) -> void {
+    lreg := (instr & 0xF0) >> 4
+    lhs := vm.registers[lreg].int
+    rhs := loadImmediate(instr, vm)
+    result := lhs + rhs
+    vm.registers[lreg].int = result
+    if result == 0
+        vm.flags = 1
+}
+
+sub :: fn(instr: u16, vm: *VM) -> void {
+    lreg := (instr & 0xF0) >> 4
+    left  := vm.registers[lreg].int
+    right := vm.registers[instr & 0xF].int
+    result := left - right
+    vm.registers[lreg].int = result
+    if result == 0
+        vm.flags = 1
+}
+
+cpy :: fn(instr: u16, vm: *VM) -> void {
+    lreg := (instr & 0xF0) >> 4
+    right := vm.registers[instr & 0xF].int
+    vm.registers[lreg].int = right
+    if right == 0
+        vm.flags = 1
+}
+
+mov :: fn(instr: u16, vm: *VM) -> void {
+    lreg := (instr & 0xF0) >> 4
+    rhs := loadImmediate(instr, vm)
+    vm.registers[lreg].int = rhs
+    if rhs == 0
+        vm.flags = 1
+}
+
+cmp :: fn(instr: u16, vm: *VM) -> void {
+    lreg := (instr & 0xF0) >> 4
+    left  := vm.registers[lreg].int
+    right := vm.registers[instr & 0xF].int
+    result := left + right
+    vm.registers[lreg].int = result
+
+    uLeft := cast(u64)left
+    uRight := cast(u64)right
+
+    f: u8 = 0
+    f |= (left == right)  ? 0x01 : 0
+    f |= (left > right)   ? 0x02 : 0
+    f |= (left < right)   ? 0x04 : 0
+    f |= (uLeft > uRight) ? 0x08 : 0
+    f |= (uLeft < uRight) ? 0x10 : 0
+
+    vm.flags = f
+}
+
+jmp :: fn(instr: u16, vm: *VM) -> void {
+    if !conditions.shouldBranch(instr & 0xF, vm.flags)
+        return
+
+    lreg := (instr & 0xF0) >> 4
+    vm.ip = autocast vm.registers[lreg].int
+}
+
+jmi :: fn(instr: u16, vm: *VM) -> void {
+    address := loadImmediate(instr, vm)
+
+    condition := (instr & 0xF0) >> 4
+    if conditions.shouldBranch(condition, vm.flags)
+        vm.ip = autocast address
+}

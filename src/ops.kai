@@ -1,0 +1,45 @@
+HALT :: 0x00
+NOP  :: 0x01
+ADD  :: 0x02
+SUB  :: 0x03
+
+MOV  :: 0x10
+CPY  :: 0x11
+CMP  :: 0x12
+
+JMP  :: 0x20
+
+ADDi :: 0x82
+MOVi :: 0x90
+
+JMI  :: 0xA0
+
+getName :: fn(instr: u16) -> string {
+    opcode := (instr >> 8) & 0x7F // remove immediate flag
+
+    switch opcode {
+    case HALT: return "hlt"
+    case NOP:  return "nop"
+    case ADD:  return "add"
+    case SUB:  return "sub"
+    case MOV:  return "mov"
+    case CPY:  return "cpy"
+    case CMP:  return "cmp"
+    case JMP:  return "jmp"
+    case: 
+        return "unk"
+    }
+}
+
+buildHalt :: fn() -> u16 {
+    return HALT << 8
+}
+
+buildNop :: fn() -> u16 {
+    return NOP << 8
+}
+
+buildAdd :: fn(l, r: u16) -> u16 {
+    return ADD << 8 | l << 4 | r
+}
+
